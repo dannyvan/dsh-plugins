@@ -65,26 +65,29 @@ export function listMcpServers(ctx) {
   return servers
 }
 
-function schemasOf(tools) {
+function schemaList(tools, scope) {
   if (tools === null || tools === undefined || typeof tools.schemas !== 'function') return []
-  const list = tools.schemas()
+  const list = scope === undefined ? tools.schemas() : tools.schemas(scope)
   return Array.isArray(list) ? list : []
 }
 
 export function collectToolNames(ctx) {
   const names = new Set()
-  const add = (tools) => {
-    for (const tool of schemasOf(tools)) {
+  const add = (list) => {
+    for (const tool of list) {
       if (tool !== null && typeof tool === 'object' && typeof tool.name === 'string') {
         names.add(tool.name)
       }
     }
   }
-  add(ctx.tools)
+  add(schemaList(ctx.tools))
   try {
-    for (const agent of ctx.agents?.roots?.() ?? []) add(agent?.ctx?.tools)
+    for (const agent of ctx.agents?.roots?.() ?? []) {
+      // tools 是上下文全局服务：schemas() 无参 = 全局层；作用域内 MCP 必须 schemas(agent)
+      add(schemaList(ctx.tools, agent))
+    }
   } catch {
-    // roots() 不可用时仍用 profile 级 tools
+    // roots() / schemas(agent) 不可用时仍用全局视图
   }
   return names
 }

@@ -1,7 +1,8 @@
 // dsh-mcp-status · Client half（DSH web __ModuleLoader__ 格式，纯 DOM，零构建）
 // 左下角设置按钮那一排加「MCP ×N」徽章，点击弹出服务器列表弹窗：
 // - 每行 serverName + 状态点（绿=在线/灰=未连接）+ 工具数 + 传输方式 + 端点摘要
-// - 弹窗内「刷新」按钮重查；打开弹窗时自动刷新一次
+// - 打开弹窗时自动重拉；MCP 握手未完成时后台再试几次；弹窗内「刷新」仍可手点
+// - checkedAt 按北京时间展示（API 仍是 UTC ISO）
 // - 与 dsh-version 徽章（.dshv-badge）自动错开排列，不重叠
 // - 侧边栏收起成窄栏时自动隐藏
 // 数据来自 Host 路由 GET /api/dsh-mcp-status（运行时注册表，不含凭证）。
@@ -16,6 +17,25 @@ window.__ModuleLoader__.load({
     const ROW_SELECTOR = '[class*="_settingsArea"]'
     const RAIL_WIDTH_PX = 100
     const POP_W = 360
+    const SETTLE_DELAYS_MS = [500, 1000, 2000, 3000, 5000]
+
+    /** API 的 checkedAt 是 UTC ISO；展示转北京时间并标注。 */
+    function formatCheckedAt(iso) {
+      if (typeof iso !== 'string' || iso.length === 0) return ''
+      const d = new Date(iso)
+      if (Number.isNaN(d.getTime())) return ''
+      const bj = new Date(d.getTime() + 8 * 60 * 60 * 1000)
+      return '更新于 ' + bj.toISOString().slice(0, 19).replace('T', ' ') + '（北京时间）'
+    }
+
+    function sleep(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms))
+    }
+
+    function serversPending(data) {
+      const servers = data && Array.isArray(data.servers) ? data.servers : []
+      return servers.length === 0 || servers.some((s) => s.online !== true)
+    }
 
     const CSS = `
       .dshm-badge {
@@ -273,8 +293,7 @@ window.__ModuleLoader__.load({
           }
           const time = document.createElement('span')
           time.className = 'dshm-pop-time'
-          const at = payload && typeof payload.checkedAt === 'string' ? payload.checkedAt : ''
-          time.textContent = at.length > 0 ? '更新于 ' + at.slice(0, 19).replace('T', ' ') + 'Z' : ''
+          time.textContent = formatCheckedAt(payload && payload.checkedAt)
           foot.append(refreshBtn, time)
           popEl.append(foot)
 
@@ -311,10 +330,13 @@ window.__ModuleLoader__.load({
           })
         }
 
-        async function refresh() {
+        async function refresh(opts) {
           if (disposed) return
-          badge.className = 'dshm-badge dshm-checking'
-          badge.textContent = 'MCP …'
+          const silent = opts !== null && opts !== undefined && opts.silent === true
+          if (!silent) {
+            badge.className = 'dshm-badge dshm-checking'
+            badge.textContent = 'MCP …'
+          }
           try {
             const res = await fetch(API_PATH, { cache: 'no-store' })
             const body = res.ok ? await res.json() : null
@@ -323,6 +345,16 @@ window.__ModuleLoader__.load({
             payload = null
           }
           renderBadge()
+        }
+
+        async function refreshUntilSettled() {
+          await refresh()
+          for (const ms of SETTLE_DELAYS_MS) {
+            if (disposed || !serversPending(payload)) return
+            await sleep(ms)
+            if (disposed) return
+            await refresh({ silent: true })
+          }
         }
 
         // ---- 与 dsh-version 徽章错开：MCP 徽章放在其左侧 ----
@@ -386,11 +418,15 @@ window.__ModuleLoader__.load({
           syncVisibility()
         }
 
-        badge.onclick = (event) => {
+        badge.onclick = async (event) => {
           event.preventDefault()
           event.stopPropagation()
-          if (pop !== null) closePopover()
-          else openPopover()
+          if (pop !== null) {
+            closePopover()
+            return
+          }
+          await refresh()
+          if (!disposed) openPopover()
         }
 
         // 侧边栏异步渲染，等 DOM 出现后再挂载
@@ -398,7 +434,7 @@ window.__ModuleLoader__.load({
         bodyObserver.observe(document.body, { childList: true, subtree: true })
         mount()
 
-        refresh()
+        refreshUntilSettled()
 
         return () => {
           disposed = true
