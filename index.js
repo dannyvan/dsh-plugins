@@ -1,7 +1,7 @@
 // dsh-mcp-status · Host half
-// GET /api/dsh-mcp-status：返回当前 profile 加载的 MCP server 清单 + 连接状态 + 已注册工具数。
-// 数据全部来自运行时 cordis 注册表与工具注册表，不读任何配置文件；
-// 只透出公开字段（serverName / transport / command / url 去 query），绝不返回 env / 密码 / headers。
+// GET /api/dsh-mcp-status：进程级 MCP 清单（公开字段 only）。
+// 挂载（.mcp.json → agent.ctx）在 apply() 的另一条 effect 里；本路由不读配置、
+// 绝不返回 env / 密码 / headers。
 
 export const name = 'dsh-mcp-status'
 export const inject = ['webServer', 'tools']
@@ -41,7 +41,7 @@ function endpointOf(config) {
 }
 
 /** 枚举 mcp-client 插件的 live fiber 配置，只取公开字段。 */
-function listMcpServers(ctx) {
+export function listMcpServers(ctx) {
   const servers = []
   ctx.registry.forEach((runtime) => {
     if (runtime.name !== 'mcp-client') return
@@ -63,16 +63,37 @@ function listMcpServers(ctx) {
   return servers
 }
 
-/** 按 mcp__<serverName>__ 前缀统计每个 server 已注册的工具数（>0 视为在线）。 */
-function fillToolCounts(ctx, servers) {
-  const schemas = ctx.tools.schemas()
+function schemasOf(tools) {
+  if (tools === null || tools === undefined || typeof tools.schemas !== 'function') return []
+  const list = tools.schemas()
+  return Array.isArray(list) ? list : []
+}
+
+export function collectToolNames(ctx) {
+  const names = new Set()
+  const add = (tools) => {
+    for (const tool of schemasOf(tools)) {
+      if (tool !== null && typeof tool === 'object' && typeof tool.name === 'string') {
+        names.add(tool.name)
+      }
+    }
+  }
+  add(ctx.tools)
+  try {
+    for (const agent of ctx.agents?.roots?.() ?? []) add(agent?.ctx?.tools)
+  } catch {
+    // roots() 不可用时仍用 profile 级 tools
+  }
+  return names
+}
+
+export function fillToolCounts(ctx, servers) {
+  const names = collectToolNames(ctx)
   for (const server of servers) {
     const prefix = `mcp__${server.serverName}__`
     let count = 0
-    for (const tool of schemas) {
-      if (tool !== null && typeof tool === 'object' && typeof tool.name === 'string' && tool.name.startsWith(prefix)) {
-        count += 1
-      }
+    for (const name of names) {
+      if (name.startsWith(prefix)) count += 1
     }
     server.toolCount = count
     server.online = count > 0
