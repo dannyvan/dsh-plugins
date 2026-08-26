@@ -1,12 +1,13 @@
 {
   "name": "dsh-mcp-status",
-  "description": "左下角 MCP 状态徽章：显示当前工作区加载的 MCP server 数量，点击展开服务器列表（名称/连接状态/工具数），支持手动刷新",
+  "description": "左下角 MCP 状态徽章 + 按工作区 cwd 挂载 <cwd>/.mcp.json：显示 MCP server 数量，点击展开服务器列表（名称/连接状态/工具数），支持手动刷新",
   "version": "1.0.0",
   "entry": {
     "name": "dsh-mcp-status",
     "inject": [
       "webServer",
-      "tools"
+      "tools",
+      "agents"
     ]
   },
   "client": {

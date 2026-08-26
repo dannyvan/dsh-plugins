@@ -3,8 +3,10 @@
 // 挂载（.mcp.json → agent.ctx）在 apply() 的另一条 effect 里；本路由不读配置、
 // 绝不返回 env / 密码 / headers。
 
+import { loadMcpClient, mountIfRoot } from './mount.js'
+
 export const name = 'dsh-mcp-status'
-export const inject = ['webServer', 'tools']
+export const inject = ['webServer', 'tools', 'agents']
 
 const API_PATH = '/api/dsh-mcp-status'
 // cordis FiberState：PENDING=0 LOADING=1 ACTIVE=2 FAILED=3 DISPOSED=4 UNLOADING=5
@@ -124,4 +126,26 @@ export function apply(ctx) {
       }
     },
   }), 'dsh-mcp-status: route')
+
+  ctx.effect(() => {
+    const mounted = new WeakSet()
+    let stopCreated = () => {}
+    let stopping = false
+    const start = loadMcpClient().then((mcpClient) => {
+      if (stopping) return
+      for (const agent of ctx.agents.roots()) {
+        mountIfRoot(ctx, agent, mcpClient, mounted)
+      }
+      stopCreated = ctx.on('agent/created', ({ agent }) => {
+        mountIfRoot(ctx, agent, mcpClient, mounted)
+      })
+    }).catch((error) => {
+      ctx.logger.warn(`dsh-mcp-status: cannot load mcp-client, mount disabled: ${String(error)}`)
+    })
+    return () => {
+      stopping = true
+      stopCreated()
+      return Promise.resolve(start).then(() => {})
+    }
+  }, 'dsh-mcp-status: mount')
 }
