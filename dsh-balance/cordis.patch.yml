@@ -1,0 +1,5 @@
+# dsh-balance：DeepSeek 账户余额显示（输入框工具行右侧）
+- insert:
+    - id: dsh-balance
+      name: dsh-balance
+      inject: [webServer]

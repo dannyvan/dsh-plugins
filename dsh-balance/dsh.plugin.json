@@ -1,0 +1,14 @@
+{
+  "name": "dsh-balance",
+  "description": "DeepSeek 账户余额显示：输入框工具行右侧显示 ¥xx.xx，点击刷新，60 秒自动更新",
+  "version": "1.0.0",
+  "entry": {
+    "name": "dsh-balance",
+    "inject": [
+      "webServer"
+    ]
+  },
+  "client": {
+    "platform": "web"
+  }
+}
