@@ -7,7 +7,6 @@ DeepSeek Harness（dsh）插件合集。由原先独立仓库合并而来，每�
 | 目录 | 说明 |
 |------|------|
 | [`dsh-balance`](./dsh-balance/) | 输入框工具行右侧显示 DeepSeek 账户余额（点击刷新，60 秒自动更新） |
-| [`dsh-file-drop`](./dsh-file-drop/) | 拖拽 / 选择非图片文件，把路径写入输入框草稿 |
 | [`dsh-mcp-status`](./dsh-mcp-status/) | 左下角 MCP 状态徽章；按工作区 cwd 挂载 `.mcp.json` |
 | [`dsh-version`](./dsh-version/) | 左下角显示 dsh 版本；有新版本 / 插件可更新时提示 |
 
@@ -23,3 +22,5 @@ DeepSeek Harness（dsh）插件合集。由原先独立仓库合并而来，每�
 - dannyvan/dsh-file-drop
 - dannyvan/dsh-mcp-status
 - dannyvan/dsh-version
+
+2026-10-16 移除 `dsh-file-drop`（依赖已删除的 dsh-desktop 桌面壳），历史仍可在 git log 中找到。
