@@ -1,0 +1,5 @@
+# dsh-version：左下角显示 harness 版本 + 新版本提示
+- insert:
+    - id: dsh-version
+      name: dsh-version
+      inject: [webServer]

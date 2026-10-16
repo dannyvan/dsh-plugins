@@ -1,0 +1,14 @@
+{
+  "name": "dsh-version",
+  "description": "左下角显示 DeepSeek Harness 版本号；npm 有新版本时高亮提示可跳转 Releases，已安装插件（dshmarket 管理）有新版本时提示「N 个插件可更新」并给出更新命令",
+  "version": "1.0.0",
+  "entry": {
+    "name": "dsh-version",
+    "inject": [
+      "webServer"
+    ]
+  },
+  "client": {
+    "platform": "web"
+  }
+}
