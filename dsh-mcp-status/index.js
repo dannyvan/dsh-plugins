@@ -3,6 +3,7 @@
 // 挂载（.mcp.json → agent.ctx）在 apply() 的另一条 effect 里；本路由不读配置、
 // 绝不返回 env / 密码 / headers。
 
+import { applyDisplayNames, publicCwd } from './display.js'
 import { loadMcpClient, mountIfRoot } from './mount.js'
 
 export const name = 'dsh-mcp-status'
@@ -55,13 +56,13 @@ export function listMcpServers(ctx) {
         serverName: config.serverName,
         transport: config.transport,
         endpoint: endpointOf(config),
+        cwd: publicCwd(config),
         online: false,
         toolCount: 0,
       })
     }
   })
-  // 稳定排序：serverName 字典序（HMR 重载也不会导致列表跳位）
-  servers.sort((a, b) => a.serverName.localeCompare(b.serverName))
+  applyDisplayNames(servers)
   return servers
 }
 

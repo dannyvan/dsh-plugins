@@ -1,6 +1,6 @@
 // dsh-mcp-status · Client half（DSH web __ModuleLoader__ 格式，纯 DOM，零构建）
 // 左下角设置按钮那一排加「MCP ×N」徽章，点击弹出服务器列表弹窗：
-// - 每行 serverName + 状态点（绿=在线/灰=未连接）+ 工具数 + 传输方式 + 端点摘要
+// - 每行标题为「项目名 · 原键」（同目录多会话再附短标签）+ 状态点 + 工具数 + 传输方式 + 端点摘要
 // - 打开弹窗时自动重拉；MCP 握手未完成时后台再试几次；弹窗内「刷新」仍可手点
 // - checkedAt 按北京时间展示（API 仍是 UTC ISO）
 // - 与 dsh-version 徽章（.dshv-badge）自动错开排列，不重叠
@@ -258,8 +258,14 @@ window.__ModuleLoader__.load({
               main.className = 'dshm-row-main'
               const nameEl = document.createElement('div')
               nameEl.className = 'dshm-row-name'
-              nameEl.textContent = server.serverName || '(未命名)'
-              nameEl.title = server.serverName || ''
+              const label = typeof server.displayName === 'string' && server.displayName.length > 0
+                ? server.displayName
+                : (server.serverName || '(未命名)')
+              nameEl.textContent = label
+              const hint = []
+              if (typeof server.cwd === 'string' && server.cwd.length > 0) hint.push(server.cwd)
+              if (typeof server.serverName === 'string' && server.serverName.length > 0) hint.push(server.serverName)
+              nameEl.title = hint.join('\n')
               const meta = document.createElement('div')
               meta.className = 'dshm-row-meta'
               const bits = []
