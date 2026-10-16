@@ -1,0 +1,7 @@
+# dsh-mcp-status：左下角 MCP 状态徽章 + 按会话 cwd 挂载 <cwd>/.mcp.json
+# 徽章数据源：运行时 cordis 注册表 + 各 root agent.ctx 工具前缀计数；
+# 不把 .mcp.json 的凭证字段送进 API。
+- insert:
+    - id: dsh-mcp-status
+      name: dsh-mcp-status
+      inject: [webServer, tools, agents]

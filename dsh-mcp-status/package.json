@@ -1,0 +1,35 @@
+{
+  "name": "dsh-mcp-status",
+  "version": "1.0.0",
+  "description": "左下角 MCP 状态徽章 + 按工作区 cwd 挂载 <cwd>/.mcp.json：显示 MCP server 数量，点击展开服务器列表（名称/连接状态/工具数），支持手动刷新",
+  "license": "MIT",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "mount.js",
+    "translate.js",
+    "cordis.patch.yml",
+    "dsh.plugin.json"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web"
+    }
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test"
+  }
+}
