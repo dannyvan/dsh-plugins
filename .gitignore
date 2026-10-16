@@ -1,0 +1,18 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+
+# === AI 工具落点（跨工具通用）===
+.claude/*
+!.claude/settings.json
+!.claude/hooks/
+.mcp.json
+.mcp.json.local
+.kimi-code/
+.cursor/
+.codex/
+.dsh/
+.codegraph/
+.handoff.md
+.secrets.local.md
